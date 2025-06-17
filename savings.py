@@ -1,29 +1,25 @@
-import streamlit as st
-from savings_account import SavingsAccount
+from account import Account
 
-st.title("💰 Savings Account")
+class SavingsAccount(Account):
+    def __init__(self, balance=0, interest_rate=0.02):
+        super().__init__(balance)
+        self.interest_rate = interest_rate  # 2% interest by default
+        self.withdrawals = 0
+        self.max_withdrawals = 3  # Optional: Max 3 withdrawals per month
 
-if "savings" not in st.session_state:
-    st.session_state.savings = SavingsAccount()
+    def apply_interest(self):
+        interest = self.balance * self.interest_rate
+        self.balance += interest
+        return interest
 
-action = st.selectbox("Choose action", ["Deposit", "Withdraw", "Apply Interest", "View Balance"])
+    def withdraw(self, amount):
+        if self.withdrawals >= self.max_withdrawals:
+            print("Withdrawal limit reached for the month.")
+            return False
+        if super().withdraw(amount):
+            self.withdrawals += 1
+            return True
+        return False
 
-amount = st.number_input("Amount", min_value=0.0, step=10.0)
-
-if st.button("Submit"):
-    acc = st.session_state.savings
-    if action == "Deposit":
-        if acc.deposit(amount):
-            st.success("Deposit successful")
-        else:
-            st.error("Deposit failed")
-    elif action == "Withdraw":
-        if acc.withdraw(amount):
-            st.success("Withdrawal successful")
-        else:
-            st.error("Insufficient funds")
-    elif action == "Apply Interest":
-        interest = acc.apply_interest()
-        st.success(f"Interest of {interest:.2f} applied!")
-
-st.info(f"Current Balance: ₦{st.session_state.savings.get_balance():.2f}")
+    def reset_withdrawals(self):
+        self.withdrawals = 0
